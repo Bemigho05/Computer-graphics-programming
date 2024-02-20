@@ -17,12 +17,13 @@
 
 float cameraX, cameraY, cameraZ;
 float cubeLocX, cubeLocY, cubeLocZ;
+float pyrLocX, pyrLocY, pyrLocZ;
 
 GLuint renderingProgram;
 GLuint vao[numVAOs], vbo[numVBOs];
 
 // variable allocation for display
-GLuint vLoc, tfLoc, projLoc;
+GLuint mvLoc, projLoc;
 
 int width, height;
 float aspect;
@@ -72,6 +73,7 @@ void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 8.0f;
 	cubeLocX = 0.0f; cubeLocY = -2.0f; cubeLocZ = 0.0f;		// shift down Y to reveal perspective
+	pyrLocX = 0.5f; pyrLocY = 2.0f; pyrLocZ = 0.0f;
 
 	glfwGetFramebufferSize(window, &width, &height);
 	aspect = (float)width / (float)height;
@@ -90,17 +92,15 @@ void display(GLFWwindow* window, double currentTime) {
 	glUseProgram(renderingProgram);
 
 	vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
+	mMat = glm::translate(glm::mat4(1.0f), glm::vec3(cubeLocX, cubeLocY, cubeLocZ));
 
-	vLoc = glGetUniformLocation(renderingProgram, "v_matrix");
+	mvMat = vMat * mMat;
+
+	mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
 	projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
 
-	glUniformMatrix4fv(vLoc, 1, GL_FALSE, glm::value_ptr(vMat));
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
-
-
-	timeFactor = ((float)currentTime);
-	tfLoc = glGetUniformLocation(renderingProgram, "tf");
-	glUniform1f(tfLoc, (float)timeFactor);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
@@ -108,8 +108,22 @@ void display(GLFWwindow* window, double currentTime) {
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 100000);
+	// draw the pyramid (use buffer #1)
+	mMat = glm::translate(glm::mat4(1.0f), glm::vec3(pyrLocX, pyrLocY, pyrLocZ));
+	mvMat = vMat * mMat;
+
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, 18);
 }
 
 int main(void) {
@@ -119,7 +133,7 @@ int main(void) {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // I don't know what this does
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // and neither this
 
-	GLFWwindow* window = glfwCreateWindow(1000, 1000, "opengl app", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(600, 600, "opengl app", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
 	glfwSwapInterval(1);
