@@ -67,7 +67,7 @@ static void setupVertices(void) {	// 36 vertices, 12 triangles, make 2 X 2 X 2 c
 static void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 8.0f;
-	pyrLocX = 0.5f; pyrLocY = 0.0f; pyrLocZ = 0.0f;
+	pyrLocX = 0.0f; pyrLocY = 3.0f; pyrLocZ = 0.0f;
 
 	glfwGetFramebufferSize(window, &width, &height);
 	aspect = (float)width / (float)height;
@@ -92,7 +92,8 @@ static void display(GLFWwindow* window, double currentTime) {
 
 	vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
 	mMat = glm::translate(glm::mat4(1.0f), glm::vec3(pyrLocX, pyrLocY, pyrLocZ));
-	mvMat = mMat * vMat;
+	rMat = glm::rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	mvMat = mMat * vMat * rMat;
 
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
