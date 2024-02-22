@@ -67,7 +67,7 @@ static void setupVertices(void) {	// 36 vertices, 12 triangles, make 2 X 2 X 2 c
 static void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 8.0f;
-	pyrLocX = 0.5f; pyrLocY = 2.0f; pyrLocZ = 0.0f;
+	pyrLocX = 0.5f; pyrLocY = 0.0f; pyrLocZ = 0.0f;
 
 	glfwGetFramebufferSize(window, &width, &height);
 	aspect = (float)width / (float)height;
